@@ -1,0 +1,46 @@
+# auth.example.com — simple-auth
+# app.example.com  — gated app
+#
+# /session/* is proxied to auth so /session/start and /session/establish
+# can set host-only cookies on app.example.com. Everything else is checked
+# with GET /session/check (200 + Remote-*, 401 login, 403 groups).
+# Forward URLs and groups are set on the client.
+#
+# Both go straight to the local backend, which trusts 127.0.0.1
+# (OIDC_TRUSTED_PROXIES) and reads the protected URL from the
+# X-Forwarded-Proto/Host/Uri headers that Caddy sets.
+#
+# Env: OIDC_ISSUER and OIDC_FRONTEND_ORIGIN = https://auth.example.com
+#      OIDC_ALLOWED_HOSTS=auth.example.com
+#      OIDC_TRUSTED_PROXIES=127.0.0.1
+#      OIDC_APP_ORIGINS=https://app.example.com
+# Backends: 127.0.0.1:8000 (simple-auth), 127.0.0.1:3000 (app)
+
+auth.example.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:8000
+}
+
+app.example.com {
+	encode gzip
+
+	# /session/* is served on this host, so the session cookie is bound to
+	# app.example.com only (no Domain), never to *.example.com.
+	handle /session/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		forward_auth 127.0.0.1:8000 {
+			uri /session/check
+			copy_headers Remote-User Remote-Email Remote-Name Remote-Groups
+
+			@denied status 401 403
+			handle_response @denied {
+				redir * {http.reverse_proxy.header.Location}
+			}
+		}
+
+		reverse_proxy 127.0.0.1:3000
+	}
+}
