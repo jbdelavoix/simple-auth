@@ -3,6 +3,20 @@
 Identity directory: **OpenID Connect** for apps that implement it, **session check** for the others.  
 **FastAPI + Authlib** backend, **Vite + React** console.
 
+## Screens
+
+Sign-in, MFA, and the console. The title on the sign-in screen is the one set in **Console → Settings**.
+
+| Sign-in | MFA |
+| --- | --- |
+| ![Sign-in](docs/screens/login.jpg) | ![MFA verification, with an option to trust this device](docs/screens/mfa.jpg) |
+
+![Console: users](docs/screens/users.jpg)
+
+![Console: an OIDC client and a Forward client](docs/screens/clients.jpg)
+
+![Console: session duration and MFA trust](docs/screens/settings.jpg)
+
 ## Run (Docker)
 
 ```bash
